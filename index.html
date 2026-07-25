@@ -727,7 +727,7 @@
                             <p class="user-email" id="dropdownEmail">-</p>
                         </div>
                         <div class="dropdown-links">
-                            <a href="profile.html" class="dropdown-link"><i class="fas fa-user-circle"></i> Profil Saya</a>
+                            <a href="https://bidangpkabkpsdmciamis.github.io/Singgatera/profile.html" class="dropdown-link"><i class="fas fa-user-circle"></i> Profil Saya</a>
                             <a href="#" class="dropdown-link" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Keluar</a>
                         </div>
                     </div>
@@ -898,6 +898,7 @@
                     <ul>
                         <li><a href="https://bidangpkabkpsdmciamis.github.io/Singgatera/"><i class="fas fa-home"></i> Beranda</a></li>
                         <li><a href="https://docs.google.com/forms/d/e/1FAIpQLSdl9y1wT1xNR-D3MYOnwTVkp9eJWdN7NbAkl8DTyjOpm-QhTQ/viewform"><i class="fas fa-clipboard-check"></i> Evaluasi</a></li>
+                        <li><a href="https://bidangpkabkpsdmciamis.github.io/Singgatera/form-pk.html"><i class="fas fa-pen-fancy"></i> Form PK</a></li>
                     </ul>
                 </div>
                 <div class="footer-col footer-links">
@@ -956,7 +957,7 @@
         const instansiPenyelenggara = document.getElementById('instansiPenyelenggara');
         const linkSertifikat = document.getElementById('linkSertifikat');
 
-        // GAS Web App URL - GANTI DENGAN URL DEPLOYMENT ANDA
+        // GAS Web App URL - SUDAH DISESUAIKAN DENGAN DEPLOYMENT ANDA
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbznWtpqxtm9mqRsnizGmHy-Gjs5oNKf9AzaeGfKga3b3jB5eopla9C76kUhP4JcyQED/exec';
 
         // ====== SCROLL EFFECT ======
@@ -992,20 +993,38 @@
                         loginTime.getFullYear() === now.getFullYear();
 
                     if (isSameDay) {
+                        // Set user info di header
                         userName.textContent = userData.name || userData.username || 'User';
                         dropdownName.textContent = userData.name || userData.username || 'User';
                         dropdownEmail.textContent = userData.email || userData.username || '-';
                         lockedOverlay.classList.remove('active');
+
+                        // ===== AUTO-FILL NAMA DAN NIP =====
+                        // Nama lengkap dari data login
                         namaLengkap.value = userData.name || userData.username || '';
-                        nip.value = userData.nip || userData.nip_user || '';
+                        
+                        // NIP dari data login (coba berbagai kemungkinan key)
+                        nip.value = userData.nip || userData.nip_user || userData.nip_user || '';
+                        
+                        // Jika NIP masih kosong, coba cari dari data lain
+                        if (!nip.value && userData.email) {
+                            const emailParts = userData.email.split('@');
+                            if (emailParts.length > 0 && !isNaN(emailParts[0])) {
+                                nip.value = emailParts[0];
+                            }
+                        }
+                        
                         return true;
                     } else {
                         localStorage.removeItem('loginData');
                     }
                 } catch (e) {
+                    console.error('Error parsing login data:', e);
                     localStorage.removeItem('loginData');
                 }
             }
+            
+            // Not logged in
             userName.textContent = 'Guest';
             dropdownName.textContent = 'Guest';
             dropdownEmail.textContent = 'Silakan login';
@@ -1018,7 +1037,7 @@
             e.preventDefault();
             localStorage.removeItem('loginData');
             alert('Anda telah keluar dari sistem.');
-            window.location.href = 'index.html';
+            window.location.href = 'https://bidangpkabkpsdmciamis.github.io/Singgatera/';
         });
 
         // ====== FORM SUBMISSION ======
@@ -1103,14 +1122,17 @@
         isiLagiBtn.addEventListener('click', () => {
             successModal.classList.remove('active');
             form.reset();
+            
+            // Re-fill auto fields dengan data login
             const loginData = localStorage.getItem('loginData');
             if (loginData) {
                 try {
                     const userData = JSON.parse(loginData);
                     namaLengkap.value = userData.name || userData.username || '';
-                    nip.value = userData.nip || userData.nip_user || '';
+                    nip.value = userData.nip || userData.nip_user || userData.nip_user || '';
                 } catch (e) {}
             }
+            
             tahunPelaksanaan.value = new Date().getFullYear();
             const today = new Date().toISOString().split('T')[0];
             tglMulai.value = today;
