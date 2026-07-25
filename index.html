@@ -994,18 +994,19 @@
 
                     if (isSameDay) {
                         // Set user info di header
-                        userName.textContent = userData.name || userData.username || 'User';
-                        dropdownName.textContent = userData.name || userData.username || 'User';
+                        const displayName = userData.name || userData.username || userData.nama || 'User';
+                        userName.textContent = displayName;
+                        dropdownName.textContent = displayName;
                         dropdownEmail.textContent = userData.email || userData.username || '-';
                         lockedOverlay.classList.remove('active');
 
-                        // ===== AUTO-FILL NAMA DAN NIP =====
-                        // Nama lengkap dari data login
-                        namaLengkap.value = userData.name || userData.username || '';
-                        
-                        // NIP dari data login (coba berbagai kemungkinan key)
-                        nip.value = userData.nip || userData.nip_user || userData.nip_user || '';
-                        
+                        // ===== AUTO-FILL NAMA =====
+                        namaLengkap.value = userData.name || userData.nama || userData.username || '';
+
+                        // ===== AUTO-FILL NIP =====
+                        // NIP ada di kolom username dari sheet user
+                        nip.value = userData.username || userData.nip || userData.nip_user || '';
+
                         // Jika NIP masih kosong, coba cari dari data lain
                         if (!nip.value && userData.email) {
                             const emailParts = userData.email.split('@');
@@ -1013,7 +1014,7 @@
                                 nip.value = emailParts[0];
                             }
                         }
-                        
+
                         return true;
                     } else {
                         localStorage.removeItem('loginData');
@@ -1023,7 +1024,7 @@
                     localStorage.removeItem('loginData');
                 }
             }
-            
+
             // Not logged in
             userName.textContent = 'Guest';
             dropdownName.textContent = 'Guest';
@@ -1122,17 +1123,18 @@
         isiLagiBtn.addEventListener('click', () => {
             successModal.classList.remove('active');
             form.reset();
-            
+
             // Re-fill auto fields dengan data login
             const loginData = localStorage.getItem('loginData');
             if (loginData) {
                 try {
                     const userData = JSON.parse(loginData);
-                    namaLengkap.value = userData.name || userData.username || '';
-                    nip.value = userData.nip || userData.nip_user || userData.nip_user || '';
+                    namaLengkap.value = userData.name || userData.nama || userData.username || '';
+                    // NIP ada di kolom username
+                    nip.value = userData.username || userData.nip || userData.nip_user || '';
                 } catch (e) {}
             }
-            
+
             tahunPelaksanaan.value = new Date().getFullYear();
             const today = new Date().toISOString().split('T')[0];
             tglMulai.value = today;
