@@ -932,6 +932,9 @@
     </footer>
 
     <script>
+        // ====== KONFIGURASI ======
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbwl2PA5Vw9iXiH-vTJ1n9JRXe3HImYKktlY_BDPNFPd7dHZYNNipOUBsLk-FGuXuZw3ng/exec';
+
         // ====== DOM ELEMENTS ======
         const header = document.getElementById('header');
         const nav = document.getElementById('nav');
@@ -966,52 +969,44 @@
         const instansiPenyelenggara = document.getElementById('instansiPenyelenggara');
         const linkSertifikat = document.getElementById('linkSertifikat');
 
-        // GAS Web App URL
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbwl2PA5Vw9iXiH-vTJ1n9JRXe3HImYKktlY_BDPNFPd7dHZYNNipOUBsLk-FGuXuZw3ng/exec';
-
-        // ====== FUNGSI BACA COOKIE ======
+        // ====== FUNGSI COOKIE ======
         function getCookie(name) {
             const cookies = document.cookie.split('; ');
             for (let cookie of cookies) {
                 const [key, value] = cookie.split('=');
                 if (key === name) {
                     try {
-                        return JSON.parse(decodeURIComponent(value));
+                        const decoded = decodeURIComponent(value);
+                        // Coba parse sebagai JSON
+                        try {
+                            return JSON.parse(decoded);
+                        } catch (e) {
+                            return decoded;
+                        }
                     } catch (e) {
-                        return null;
+                        return value;
                     }
                 }
             }
             return null;
         }
 
-        // ====== FUNGSI BACA FOTO DARI COOKIE ======
-        function getHeaderPhotoFromCookie() {
-            const cookies = document.cookie.split('; ');
-            for (let cookie of cookies) {
-                const [key, value] = cookie.split('=');
-                if (key === 'headerPhoto') {
-                    try {
-                        return decodeURIComponent(value);
-                    } catch (e) {
-                        return null;
-                    }
-                }
-            }
-            return null;
+        function deleteCookie(name) {
+            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.singgatera.my.id; SameSite=Lax; Secure`;
+            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax; Secure`;
         }
 
-        // ====== UPDATE HEADER DENGAN FOTO ======
+        // ====== FUNGSI UPDATE HEADER FOTO ======
         function updateHeaderPhoto() {
             const headerIcon = document.getElementById('headerUserIcon');
             if (!headerIcon) return;
             
             let photoData = null;
             
-            // ===== CEK FOTO DARI COOKIE =====
-            photoData = getHeaderPhotoFromCookie();
+            // Cek dari cookie headerPhoto
+            photoData = getCookie('headerPhoto');
             
-            // ===== FALLBACK KE LOGINDATA DI COOKIE =====
+            // Fallback ke loginData di cookie
             if (!photoData) {
                 const loginData = getCookie('loginData');
                 if (loginData && loginData.foto) {
@@ -1019,7 +1014,7 @@
                 }
             }
             
-            // ===== FALLBACK KE LOCALSTORAGE =====
+            // Fallback ke localStorage
             if (!photoData) {
                 try {
                     const localStorageData = localStorage.getItem('headerPhotoData');
@@ -1030,7 +1025,6 @@
                 } catch (e) {}
             }
             
-            // ===== TAMPILKAN =====
             if (photoData && (photoData.startsWith('data:image') || photoData.startsWith('http'))) {
                 headerIcon.innerHTML = `<img src="${photoData}" alt="Profile" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
                 headerIcon.style.background = 'none';
@@ -1043,6 +1037,113 @@
                 headerIcon.style.padding = '';
                 headerIcon.style.border = 'none';
                 console.log('[Form-PK] ℹ️ Menggunakan icon default');
+            }
+        }
+
+        // ====== CEK LOGIN STATUS ======
+        function checkLoginStatus() {
+            let userData = null;
+            let isLoggedIn = false;
+
+            console.log('[Form-PK] 🔍 Memeriksa status login...');
+            console.log('[Form-PK] 📝 Semua cookie:', document.cookie);
+
+            // ===== STEP 1: CEK COOKIE loginData =====
+            const cookieData = getCookie('loginData');
+            console.log('[Form-PK] 🔍 Cookie loginData:', cookieData);
+            
+            if (cookieData) {
+                // Jika cookieData adalah string, coba parse
+                let parsedData = cookieData;
+                if (typeof cookieData === 'string') {
+                    try {
+                        parsedData = JSON.parse(cookieData);
+                    } catch (e) {
+                        // Jika bukan JSON, gunakan sebagai object
+                        parsedData = { username: cookieData };
+                    }
+                }
+                
+                if (parsedData && (parsedData.username || parsedData.name)) {
+                    console.log('[Form-PK] ✅ Login data ditemukan di COOKIE');
+                    userData = parsedData;
+                    isLoggedIn = true;
+                }
+            }
+
+            // ===== STEP 2: FALLBACK KE LOCALSTORAGE =====
+            if (!isLoggedIn) {
+                try {
+                    const loginData = localStorage.getItem('loginData');
+                    if (loginData) {
+                        const parsed = JSON.parse(loginData);
+                        const loginTime = new Date(parsed.loginTime);
+                        const now = new Date();
+                        const isSameDay = loginTime.getDate() === now.getDate() &&
+                            loginTime.getMonth() === now.getMonth() &&
+                            loginTime.getFullYear() === now.getFullYear();
+
+                        if (isSameDay && (parsed.username || parsed.name)) {
+                            console.log('[Form-PK] ✅ Login valid dari localStorage');
+                            userData = parsed;
+                            isLoggedIn = true;
+                            
+                            // ===== SYNC KE COOKIE =====
+                            const cookieValue = JSON.stringify(userData);
+                            document.cookie = `loginData=${encodeURIComponent(cookieValue)}; path=/; domain=.singgatera.my.id; max-age=86400; SameSite=Lax; Secure`;
+                            document.cookie = `loginData=${encodeURIComponent(cookieValue)}; path=/; max-age=86400; SameSite=Lax; Secure`;
+                            console.log('[Form-PK] ✅ Cookie disinkronkan dari localStorage');
+                        } else {
+                            localStorage.removeItem('loginData');
+                            console.log('[Form-PK] ⚠️ Login di localStorage kadaluarsa');
+                        }
+                    }
+                } catch (e) {
+                    console.error('[Form-PK] Error parsing login data:', e);
+                    localStorage.removeItem('loginData');
+                }
+            }
+
+            // ===== UPDATE UI =====
+            if (isLoggedIn && userData) {
+                const displayName = userData.name || userData.nama || userData.username || 'User';
+                userName.textContent = displayName;
+                dropdownName.textContent = displayName;
+                dropdownEmail.textContent = userData.email || userData.username || '-';
+                lockedOverlay.classList.remove('active');
+
+                updateHeaderPhoto();
+
+                // Auto-fill nama
+                namaLengkap.value = userData.name || userData.nama || userData.username || '';
+
+                // Auto-fill NIP
+                nip.value = userData.username || userData.nip || userData.nip_user || '';
+                if (!nip.value && userData.email) {
+                    const emailParts = userData.email.split('@');
+                    if (emailParts.length > 0 && !isNaN(emailParts[0])) {
+                        nip.value = emailParts[0];
+                    }
+                }
+
+                console.log('[Form-PK] ✅ User logged in:', displayName, 'NIP:', nip.value);
+                return true;
+            } else {
+                userName.textContent = 'Guest';
+                dropdownName.textContent = 'Guest';
+                dropdownEmail.textContent = 'Silakan login';
+                lockedOverlay.classList.add('active');
+                
+                const headerIcon = document.getElementById('headerUserIcon');
+                if (headerIcon) {
+                    headerIcon.innerHTML = `<i class="fas fa-user"></i>`;
+                    headerIcon.style.background = '';
+                    headerIcon.style.padding = '';
+                    headerIcon.style.border = 'none';
+                }
+                
+                console.log('[Form-PK] ❌ User not logged in');
+                return false;
             }
         }
 
@@ -1066,111 +1167,13 @@
         });
         document.addEventListener('click', () => userDropdown.classList.remove('active'));
 
-        // ====== CEK LOGIN STATUS DENGAN COOKIE ======
-        function checkLoginStatus() {
-            let userData = null;
-            let isLoggedIn = false;
-
-            // ===== PRIORITAS: CEK COOKIE loginData =====
-            const cookieData = getCookie('loginData');
-            if (cookieData && cookieData.username) {
-                console.log('[Form-PK] ✅ Login data ditemukan di COOKIE');
-                userData = cookieData;
-                isLoggedIn = true;
-            }
-
-            // ===== FALLBACK: CEK LOCALSTORAGE =====
-            if (!isLoggedIn) {
-                try {
-                    const loginData = localStorage.getItem('loginData');
-                    if (loginData) {
-                        const parsed = JSON.parse(loginData);
-                        // Validasi loginTime
-                        const loginTime = new Date(parsed.loginTime);
-                        const now = new Date();
-                        const isSameDay = loginTime.getDate() === now.getDate() &&
-                            loginTime.getMonth() === now.getMonth() &&
-                            loginTime.getFullYear() === now.getFullYear();
-
-                        if (isSameDay && parsed.username) {
-                            console.log('[Form-PK] ✅ Login valid dari localStorage');
-                            userData = parsed;
-                            isLoggedIn = true;
-                            
-                            // ===== SYNC KE COOKIE =====
-                            const cookieValue = encodeURIComponent(JSON.stringify(userData));
-                            document.cookie = `loginData=${cookieValue}; path=/; domain=.singgatera.my.id; max-age=86400; SameSite=Lax; Secure`;
-                            console.log('[Form-PK] ✅ Cookie disinkronkan dari localStorage');
-                        } else {
-                            localStorage.removeItem('loginData');
-                            console.log('[Form-PK] ⚠️ Login di localStorage kadaluarsa');
-                        }
-                    }
-                } catch (e) {
-                    console.error('Error parsing login data:', e);
-                    localStorage.removeItem('loginData');
-                }
-            }
-
-            // ===== UPDATE UI =====
-            if (isLoggedIn && userData) {
-                // Set user info di header
-                const displayName = userData.name || userData.username || 'User';
-                userName.textContent = displayName;
-                dropdownName.textContent = displayName;
-                dropdownEmail.textContent = userData.email || userData.username || '-';
-                lockedOverlay.classList.remove('active');
-
-                // ===== UPDATE HEADER FOTO =====
-                updateHeaderPhoto();
-
-                // ===== AUTO-FILL NAMA =====
-                namaLengkap.value = userData.name || userData.nama || userData.username || '';
-
-                // ===== AUTO-FILL NIP =====
-                // Coba ambil dari berbagai sumber
-                nip.value = userData.username || userData.nip || userData.nip_user || '';
-                
-                // Jika NIP masih kosong, coba cari dari email
-                if (!nip.value && userData.email) {
-                    const emailParts = userData.email.split('@');
-                    if (emailParts.length > 0 && !isNaN(emailParts[0])) {
-                        nip.value = emailParts[0];
-                    }
-                }
-
-                console.log('[Form-PK] ✅ User logged in:', displayName, 'NIP:', nip.value);
-                return true;
-            } else {
-                // Not logged in
-                userName.textContent = 'Guest';
-                dropdownName.textContent = 'Guest';
-                dropdownEmail.textContent = 'Silakan login';
-                lockedOverlay.classList.add('active');
-                
-                // Reset header ke default
-                const headerIcon = document.getElementById('headerUserIcon');
-                if (headerIcon) {
-                    headerIcon.innerHTML = `<i class="fas fa-user"></i>`;
-                    headerIcon.style.background = '';
-                    headerIcon.style.padding = '';
-                    headerIcon.style.border = 'none';
-                }
-                
-                console.log('[Form-PK] ❌ User not logged in');
-                return false;
-            }
-        }
-
         // ====== LOGOUT ======
         logoutBtn.addEventListener('click', (e) => {
             e.preventDefault();
             
-            // Hapus cookie di semua subdomain
-            document.cookie = `loginData=; path=/; domain=.singgatera.my.id; max-age=0`;
-            document.cookie = `headerPhoto=; path=/; domain=.singgatera.my.id; max-age=0`;
+            deleteCookie('loginData');
+            deleteCookie('headerPhoto');
             
-            // Hapus localStorage
             localStorage.removeItem('loginData');
             localStorage.removeItem('headerPhotoData');
             
@@ -1179,29 +1182,21 @@
             window.location.href = 'https://www.singgatera.my.id/?logout=true';
         });
 
-        // ====== PERIKSA REDIRECT DARI URL ======
+        // ====== URL PARAMETERS ======
         function checkUrlParams() {
             const urlParams = new URLSearchParams(window.location.search);
             
-            // Cek parameter logout
             if (urlParams.get('logout') === 'true') {
                 const cleanUrl = window.location.origin + window.location.pathname;
                 window.history.replaceState({}, document.title, cleanUrl);
                 console.log('[Form-PK] ✅ Logout berhasil, URL dibersihkan');
             }
             
-            // Cek parameter login success
             if (urlParams.get('login') === 'success') {
                 const cleanUrl = window.location.origin + window.location.pathname;
                 window.history.replaceState({}, document.title, cleanUrl);
-                console.log('[Form-PK] ✅ Login success, sync cookie');
-                
-                // Coba ambil data dari cookie setelah redirect
-                const cookieData = getCookie('loginData');
-                if (cookieData) {
-                    localStorage.setItem('loginData', JSON.stringify(cookieData));
-                    console.log('[Form-PK] ✅ Data login disimpan ke localStorage dari cookie');
-                }
+                console.log('[Form-PK] ✅ Login success, reload...');
+                setTimeout(() => window.location.reload(), 500);
             }
         }
 
@@ -1288,7 +1283,6 @@
             successModal.classList.remove('active');
             form.reset();
 
-            // Re-fill auto fields dengan data login
             const loginData = localStorage.getItem('loginData');
             if (loginData) {
                 try {
@@ -1305,46 +1299,47 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
 
+        // ====== RESET BORDER ON FOCUS ======
+        document.querySelectorAll('.form-control').forEach(el => {
+            el.addEventListener('focus', () => { el.style.borderColor = ''; });
+        });
+
         // ====== INIT ======
         document.addEventListener('DOMContentLoaded', () => {
-            // ===== CEK URL PARAMETERS =====
-            checkUrlParams();
-
-            // ===== UPDATE HEADER FOTO =====
-            updateHeaderPhoto();
-
-            // ===== CEK LOGIN STATUS =====
-            checkLoginStatus();
+            console.log('[Form-PK] 🚀 Initializing...');
             
-            // ===== SET DEFAULT DATES =====
+            checkUrlParams();
+            updateHeaderPhoto();
+            
+            const isLoggedIn = checkLoginStatus();
+            console.log('[Form-PK] 📊 Status Login:', isLoggedIn ? '✅ LOGGED IN' : '❌ NOT LOGGED IN');
+            
             tahunPelaksanaan.value = new Date().getFullYear();
             const today = new Date().toISOString().split('T')[0];
             tglMulai.value = today;
             tglSelesai.value = today;
             
-            // ===== PERIKSA STATUS LOGIN SECARA PERIODIK =====
-            // Cek setiap 5 detik untuk mendeteksi perubahan login di tab lain
+            // ===== PERIODIK CHECK =====
+            let lastStatus = isLoggedIn;
             setInterval(() => {
                 const cookieData = getCookie('loginData');
-                const currentUser = userName.textContent;
-                
-                if (cookieData && cookieData.username) {
-                    if (currentUser === 'Guest' || currentUser !== (cookieData.name || cookieData.username)) {
-                        console.log('[Form-PK] 🔄 Login status berubah, refresh...');
-                        window.location.reload();
+                let currentStatus = false;
+                if (cookieData) {
+                    let parsed = cookieData;
+                    if (typeof cookieData === 'string') {
+                        try { parsed = JSON.parse(cookieData); } catch(e) {}
                     }
-                } else {
-                    if (currentUser !== 'Guest') {
-                        console.log('[Form-PK] 🔄 Login status berubah (logout), refresh...');
-                        window.location.reload();
+                    if (parsed && (parsed.username || parsed.name)) {
+                        currentStatus = true;
                     }
                 }
-            }, 5000);
-        });
-
-        // ====== RESET BORDER ON FOCUS ======
-        document.querySelectorAll('.form-control').forEach(el => {
-            el.addEventListener('focus', () => { el.style.borderColor = ''; });
+                
+                if (currentStatus !== lastStatus) {
+                    console.log('[Form-PK] 🔄 Status login berubah, refresh...');
+                    window.location.reload();
+                }
+                lastStatus = currentStatus;
+            }, 3000);
         });
     </script>
 </body>
