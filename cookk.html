@@ -1233,7 +1233,7 @@
         });
         document.addEventListener('click', () => userDropdown.classList.remove('active'));
 
-        // ====== FORM SUBMISSION - DIPERBAIKI ======
+        // ====== FORM SUBMISSION - JSON + BASE64 ======
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -1307,47 +1307,49 @@
                 return;
             }
 
-            // ==== BUAT FormData ====
-            const formData = new FormData();
-            
-            // Tambahkan file dengan key 'file'
-            formData.append('file', file, `${session.nip}.pdf`);
-            
-            // Tambahkan data lainnya
-            formData.append('nip', session.nip);
-            formData.append('nama', session.nama || '');
-            formData.append('pangkat', document.getElementById('pangkat').value.trim());
-            formData.append('jabatan', document.getElementById('jabatan').value.trim());
-            formData.append('unitKerja', document.getElementById('unitKerja').value);
-            formData.append('statusKepegawaian', document.getElementById('statusKepegawaian').value);
-            formData.append('namaDiklat', document.getElementById('namaDiklat').value.trim());
-            formData.append('tglMulai', document.getElementById('tglMulai').value);
-            formData.append('tglSelesai', document.getElementById('tglSelesai').value);
-            formData.append('tahunPelaksanaan', document.getElementById('tahunPelaksanaan').value);
-            formData.append('lama', document.getElementById('lama').value);
-            formData.append('nomorSTTP', document.getElementById('nomorSTTP').value.trim());
-            formData.append('instansiPenyelenggara', document.getElementById('instansiPenyelenggara').value.trim());
-
-            // ==== DEBUG: Cek isi FormData ====
-            console.log('[PK] FormData entries:');
-            for (let pair of formData.entries()) {
-                if (pair[0] === 'file') {
-                    console.log('[PK]   file: ' + pair[1].name + ' (' + pair[1].size + ' bytes)');
-                } else {
-                    console.log('[PK]   ' + pair[0] + ': ' + pair[1]);
-                }
-            }
-
-            // ==== KIRIM KE GAS ====
+            // ==== KONVERSI FILE KE BASE64 ====
             submitBtn.disabled = true;
             submitBtn.classList.add('loading');
 
             try {
-                console.log('[PK] Sending to GAS...');
-                
+                const reader = new FileReader();
+                const fileBase64 = await new Promise((resolve, reject) => {
+                    reader.onload = () => resolve(reader.result.split(',')[1]);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+
+                console.log('[PK] File converted to base64, length: ' + fileBase64.length);
+
+                // ==== BUAT DATA JSON ====
+                const data = {
+                    fileBase64: fileBase64,
+                    fileName: file.name,
+                    fileType: file.type,
+                    nip: session.nip,
+                    nama: session.nama || '',
+                    pangkat: document.getElementById('pangkat').value.trim(),
+                    jabatan: document.getElementById('jabatan').value.trim(),
+                    unitKerja: document.getElementById('unitKerja').value,
+                    statusKepegawaian: document.getElementById('statusKepegawaian').value,
+                    namaDiklat: document.getElementById('namaDiklat').value.trim(),
+                    tglMulai: document.getElementById('tglMulai').value,
+                    tglSelesai: document.getElementById('tglSelesai').value,
+                    tahunPelaksanaan: document.getElementById('tahunPelaksanaan').value,
+                    lama: document.getElementById('lama').value,
+                    nomorSTTP: document.getElementById('nomorSTTP').value.trim(),
+                    instansiPenyelenggara: document.getElementById('instansiPenyelenggara').value.trim()
+                };
+
+                console.log('[PK] Sending to GAS as JSON...');
+
+                // ==== KIRIM KE GAS SEBAGAI JSON ====
                 const response = await fetch(GAS_UPLOAD_URL, {
                     method: 'POST',
-                    body: formData
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
                 });
 
                 console.log('[PK] Response status:', response.status);
