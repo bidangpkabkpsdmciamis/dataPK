@@ -219,7 +219,6 @@
             transition: var(--transition);
             color: var(--dark);
             text-decoration: none;
-            cursor: pointer;
         }
         .dropdown-link:hover {
             background: var(--light-gray);
@@ -238,96 +237,141 @@
             border: none;
         }
 
-        /* ===== LOGIN NIP SECTION ===== */
-        .login-section {
-            padding: 130px 20px 80px;
-            min-height: 100vh;
+        /* ===== VERIFICATION OVERLAY ===== */
+        .verify-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.92);
+            backdrop-filter: blur(12px);
+            z-index: 9999;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: var(--light-gray);
+            padding: 20px;
         }
-        .login-card {
+        .verify-overlay.hidden {
+            display: none;
+        }
+        .verify-content {
             background: white;
             border-radius: var(--border-radius-lg);
             padding: 50px 45px;
             max-width: 480px;
             width: 100%;
-            box-shadow: var(--shadow-md);
             text-align: center;
+            box-shadow: var(--shadow-xl);
+            animation: fadeIn 0.5s ease;
         }
-        .login-card .login-icon {
-            font-size: 3.5rem;
+        .verify-content .verify-icon {
+            font-size: 4rem;
             color: var(--primary);
             margin-bottom: 16px;
             display: block;
         }
-        .login-card h1 {
+        .verify-content .verify-icon .fa-id-card {
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .verify-content h2 {
             font-size: 1.8rem;
             color: var(--dark-blue);
             margin-bottom: 8px;
         }
-        .login-card p {
+        .verify-content .subtitle {
+            font-size: 0.95rem;
             color: var(--gray);
             margin-bottom: 28px;
-            font-size: 0.95rem;
+            line-height: 1.6;
         }
-        .login-card .form-group {
-            text-align: left;
+        .verify-content .nip-input-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
         }
-        .login-card .form-control {
+        .verify-content .nip-input-group .form-control {
+            flex: 1;
+            padding: 14px 18px;
+            border: 2px solid var(--light-gray);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            font-family: inherit;
+            transition: var(--transition);
             text-align: center;
-            font-size: 1.1rem;
             letter-spacing: 2px;
         }
-        .btn-login {
-            width: 100%;
-            padding: 14px;
-            font-size: 1rem;
-            font-weight: 700;
+        .verify-content .nip-input-group .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        .verify-content .nip-input-group .btn-verify {
+            padding: 14px 28px;
             background: var(--gradient-primary);
             color: white;
             border: none;
             border-radius: var(--border-radius);
+            font-weight: 700;
+            font-size: 0.95rem;
             cursor: pointer;
             transition: var(--transition);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            margin-top: 8px;
+            white-space: nowrap;
         }
-        .btn-login:hover:not(:disabled) {
-            transform: translateY(-3px);
-            box-shadow: var(--shadow-lg);
+        .verify-content .nip-input-group .btn-verify:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
-        .btn-login:disabled {
+        .verify-content .nip-input-group .btn-verify:disabled {
             opacity: 0.7;
             cursor: not-allowed;
         }
-        .btn-login .spinner {
+        .verify-content .btn-verify .spinner {
             display: none;
-            width: 22px;
-            height: 22px;
+            width: 20px;
+            height: 20px;
             border: 3px solid rgba(255, 255, 255, 0.3);
             border-top: 3px solid white;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
-        .btn-login.loading .spinner {
+        .verify-content .btn-verify.loading .spinner {
             display: inline-block;
         }
-        .btn-login.loading .btn-text {
+        .verify-content .btn-verify.loading .btn-text {
             display: none;
         }
-        .login-error {
+        .verify-content .error-message {
             color: var(--danger);
-            font-size: 0.85rem;
-            margin-top: 12px;
-            display: none;
+            font-size: 0.9rem;
+            margin-top: 8px;
+            min-height: 24px;
+            font-weight: 500;
         }
-        .login-error.show {
-            display: block;
+        .verify-content .success-message {
+            color: var(--success);
+            font-size: 0.95rem;
+            margin-top: 8px;
+            min-height: 24px;
+            font-weight: 500;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
         }
 
         /* ===== FORM SECTION ===== */
@@ -335,10 +379,9 @@
             padding: 130px 20px 80px;
             background: var(--light-gray);
             min-height: 100vh;
-            display: none;
         }
-        .form-section.active {
-            display: block;
+        .form-section.hidden {
+            display: none;
         }
         .form-card {
             background: white;
@@ -404,22 +447,6 @@
             background: var(--light-gray);
             cursor: not-allowed;
         }
-        .form-control.file-input {
-            padding: 10px;
-        }
-        .form-control.file-input::-webkit-file-upload-button {
-            background: var(--gradient-primary);
-            color: white;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            margin-right: 12px;
-        }
-        .form-control.file-input::-webkit-file-upload-button:hover {
-            opacity: 0.9;
-        }
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -477,21 +504,6 @@
         }
         .btn-submit.loading .btn-text {
             display: none;
-        }
-
-        .file-info {
-            font-size: 0.85rem;
-            color: var(--gray);
-            margin-top: 6px;
-        }
-        .file-info i {
-            margin-right: 6px;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
         }
 
         /* ===== SUCCESS MODAL ===== */
@@ -572,17 +584,6 @@
         .modal-actions .btn-secondary:hover {
             background: var(--gray);
             color: white;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: scale(0.95) translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1) translateY(0);
-            }
         }
 
         /* ===== FOOTER ===== */
@@ -720,8 +721,11 @@
             .modal-box {
                 padding: 35px 25px;
             }
-            .login-card {
+            .verify-content {
                 padding: 35px 25px;
+            }
+            .verify-content .nip-input-group {
+                flex-direction: column;
             }
         }
 
@@ -732,13 +736,28 @@
             .form-card {
                 padding: 20px 16px;
             }
-            .login-section {
-                padding: 110px 12px 60px;
-            }
         }
     </style>
 </head>
 <body>
+    <!-- ===== VERIFICATION OVERLAY ===== -->
+    <div class="verify-overlay" id="verifyOverlay">
+        <div class="verify-content">
+            <span class="verify-icon"><i class="fas fa-id-card"></i></span>
+            <h2>🔐 Verifikasi NIP</h2>
+            <p class="subtitle">Masukkan NIP Anda untuk mengakses formulir pengembangan kompetensi ASN Kabupaten Ciamis.</p>
+            <div class="nip-input-group">
+                <input type="text" class="form-control" id="nipInput" placeholder="Masukkan NIP" maxlength="18" />
+                <button class="btn-verify" id="verifyBtn">
+                    <span class="spinner"></span>
+                    <span class="btn-text"><i class="fas fa-check"></i> Verifikasi</span>
+                </button>
+            </div>
+            <div class="error-message" id="verifyError"></div>
+            <div class="success-message" id="verifySuccess"></div>
+        </div>
+    </div>
+
     <!-- ===== HEADER ===== -->
     <header class="header" id="header">
         <div class="header-container">
@@ -766,7 +785,7 @@
                             <p class="user-email" id="dropdownEmail">-</p>
                         </div>
                         <div class="dropdown-links">
-                            <a href="#" class="dropdown-link" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Bukan Saya</a>
+                            <a href="#" class="dropdown-link" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Keluar</a>
                         </div>
                     </div>
                 </div>
@@ -775,30 +794,8 @@
         </div>
     </header>
 
-    <!-- ===== LOGIN NIP SECTION ===== -->
-    <section class="login-section" id="loginSection">
-        <div class="container" style="max-width:480px;width:100%;padding:0 20px;">
-            <div class="login-card">
-                <span class="login-icon"><i class="fas fa-id-card"></i></span>
-                <h1>Masukkan NIP</h1>
-                <p>Silakan masukkan NIP Anda untuk mengakses formulir pengembangan kompetensi.</p>
-                <form id="loginForm" novalidate>
-                    <div class="form-group">
-                        <label>NIP <span class="required">*</span></label>
-                        <input type="text" class="form-control" id="loginNip" placeholder="Contoh: 197501011998021001" required maxlength="18" />
-                    </div>
-                    <button type="submit" class="btn-login" id="loginBtn">
-                        <span class="spinner"></span>
-                        <span class="btn-text"><i class="fas fa-sign-in-alt"></i> Masuk</span>
-                    </button>
-                    <div class="login-error" id="loginError">NIP tidak ditemukan. Silakan periksa kembali.</div>
-                </form>
-            </div>
-        </div>
-    </section>
-
     <!-- ===== FORM SECTION ===== -->
-    <section class="form-section" id="formSection">
+    <section class="form-section hidden" id="formSection">
         <div class="container">
             <div class="form-card">
                 <div class="form-header">
@@ -916,9 +913,11 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Upload Dokumen Sertifikat (PDF) <span class="required">*</span></label>
-                        <input type="file" class="form-control file-input" id="fileSertifikat" accept=".pdf" required />
-                        <div class="file-info"><i class="fas fa-info-circle"></i> Upload file PDF sertifikat (maks. 5MB)</div>
+                        <label>Upload Dokumen Sertifikat (Link Google Drive) <span class="required">*</span></label>
+                        <input type="url" class="form-control" id="linkSertifikat" placeholder="https://drive.google.com/file/d/..." required />
+                        <small style="color:var(--gray);font-size:0.8rem;display:block;margin-top:4px;">
+                            <i class="fas fa-info-circle"></i> Pastikan link dapat diakses oleh admin (tidak dikunci)
+                        </small>
                     </div>
 
                     <button type="submit" class="btn-submit" id="submitBtn">
@@ -937,8 +936,8 @@
             <h2>✓ Data Berhasil Dikirim</h2>
             <p>Data kegiatan pengembangan kompetensi Anda telah berhasil disimpan.</p>
             <div class="modal-actions">
-                <button class="btn btn-secondary" id="isiLagiBtn"><i class="fas fa-redo"></i> Lanjut Isi Data PK Berikutnya</button>
-                <a href="https://www.singgatera.my.id/" class="btn btn-primary"><i class="fas fa-home"></i> Kembali ke Home</a>
+                <button class="btn btn-secondary" id="isiLagiBtn"><i class="fas fa-redo"></i> Mengisi Lagi</button>
+                <a href="https://www.singgatera.my.id/" class="btn btn-primary"><i class="fas fa-home"></i> Home</a>
             </div>
         </div>
     </div>
@@ -975,15 +974,15 @@
             </div>
             <div class="footer-bottom">
                 <span>&copy; 2026 <a href="https://www.singgatera.my.id/">PKA BKPSDM Kabupaten Ciamis</a>. All Rights Reserved.</span>
-                <span>Versi 3.1</span>
+                <span>Versi 3.0</span>
             </div>
         </div>
     </footer>
 
     <script>
         // ====== KONFIGURASI ======
-        const GAS_UPLOAD_URL = 'https://script.google.com/macros/s/AKfycbwruRHTaJCbT8LDrYrG0PtPzV1WpSmF4LVs7ZNpkW8aEqTDmLRrOZHJ0aMLtPgZLNAx/exec';
-        const GAS_NIP_URL = 'https://script.google.com/macros/s/AKfycbw_WjUae31TxeinURwzuBc07k26VWrZRX9vBkIn_xvQEfF5_S_6Pl5YYAwml_h666Vk/exec';
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycby4CUxDLBSSUO8WjgpY8qohmgSIAexRkomvCvrPQ8P-2wIXVxTA5A1IvSwCowGUBrEQnw/exec';
+        const NIP_VALIDATION_URL = 'https://script.google.com/macros/s/AKfycbw_WjUae31TxeinURwzuBc07k26VWrZRX9vBkIn_xvQEfF5_S_6Pl5YYAwml_h666Vk/exec';
 
         // ====== DOM ELEMENTS ======
         const header = document.getElementById('header');
@@ -992,21 +991,24 @@
         const userBtn = document.getElementById('userBtn');
         const userDropdown = document.getElementById('userDropdown');
         const logoutBtn = document.getElementById('logoutBtn');
+
         const userName = document.getElementById('userName');
         const dropdownName = document.getElementById('dropdownName');
         const dropdownEmail = document.getElementById('dropdownEmail');
-        const loginSection = document.getElementById('loginSection');
-        const formSection = document.getElementById('formSection');
-        const loginForm = document.getElementById('loginForm');
-        const loginNip = document.getElementById('loginNip');
-        const loginBtn = document.getElementById('loginBtn');
-        const loginError = document.getElementById('loginError');
 
+        const verifyOverlay = document.getElementById('verifyOverlay');
+        const verifyBtn = document.getElementById('verifyBtn');
+        const nipInput = document.getElementById('nipInput');
+        const verifyError = document.getElementById('verifyError');
+        const verifySuccess = document.getElementById('verifySuccess');
+
+        const formSection = document.getElementById('formSection');
         const form = document.getElementById('pkForm');
         const submitBtn = document.getElementById('submitBtn');
         const successModal = document.getElementById('successModal');
         const isiLagiBtn = document.getElementById('isiLagiBtn');
 
+        // Form fields
         const namaLengkap = document.getElementById('namaLengkap');
         const nip = document.getElementById('nip');
         const pangkat = document.getElementById('pangkat');
@@ -1020,18 +1022,12 @@
         const lama = document.getElementById('lama');
         const nomorSTTP = document.getElementById('nomorSTTP');
         const instansiPenyelenggara = document.getElementById('instansiPenyelenggara');
-        const fileSertifikat = document.getElementById('fileSertifikat');
+        const linkSertifikat = document.getElementById('linkSertifikat');
 
-        // ====== COOKIE FUNCTIONS ======
-        function setCookie(name, value, hours) {
-            const expires = new Date();
-            expires.setTime(expires.getTime() + (hours * 60 * 60 * 1000));
-            const cookieString = `${name}=${encodeURIComponent(JSON.stringify(value))}; expires=${expires.toUTCString()}; path=/; SameSite=Lax; Secure`;
-            document.cookie = cookieString;
-            // Also set without Secure for local testing
-            document.cookie = `${name}=${encodeURIComponent(JSON.stringify(value))}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
-        }
+        // ====== VARIABEL ======
+        let verifiedUser = null;
 
+        // ====== FUNGSI COOKIE ======
         function getCookie(name) {
             const cookies = document.cookie.split('; ');
             for (let cookie of cookies) {
@@ -1047,175 +1043,139 @@
             return null;
         }
 
+        function setCookie(name, value, days = 1) {
+            const expires = new Date();
+            expires.setDate(expires.getDate() + days);
+            const cookieValue = typeof value === 'object' ? JSON.stringify(value) : value;
+            document.cookie = `${name}=${encodeURIComponent(cookieValue)}; expires=${expires.toUTCString()}; path=/; domain=.singgatera.my.id; SameSite=Lax; Secure`;
+            document.cookie = `${name}=${encodeURIComponent(cookieValue)}; expires=${expires.toUTCString()}; path=/; SameSite=Lax; Secure`;
+        }
+
         function deleteCookie(name) {
+            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.singgatera.my.id; SameSite=Lax; Secure`;
             document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax; Secure`;
-            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax`;
         }
 
-        // ====== SESSION MANAGEMENT ======
-        function saveSession(data) {
-            const sessionData = {
-                ...data,
-                loginTime: new Date().toISOString()
-            };
-            setCookie('pkSession', sessionData, 24);
-            localStorage.setItem('pkSession', JSON.stringify(sessionData));
-            console.log('[PK] ✅ Session saved for 24 hours');
-        }
-
-        function getSession() {
-            let session = getCookie('pkSession');
-            if (!session) {
-                try {
-                    const local = localStorage.getItem('pkSession');
-                    if (local) {
-                        session = JSON.parse(local);
-                        if (session && session.nip) {
-                            setCookie('pkSession', session, 24);
-                        }
-                    }
-                } catch (e) {}
-            }
-            return session;
-        }
-
-        function clearSession() {
-            deleteCookie('pkSession');
-            localStorage.removeItem('pkSession');
-            console.log('[PK] ✅ Session cleared');
-        }
-
-        // ====== CHECK SESSION ======
-        function checkSession() {
-            const session = getSession();
-            if (session && session.nip && session.nama) {
-                const loginTime = new Date(session.loginTime);
-                const now = new Date();
-                const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
-                if (hoursDiff < 24) {
-                    console.log('[PK] ✅ Valid session found for:', session.nama);
-                    showForm(session);
-                    return true;
-                } else {
-                    console.log('[PK] ⚠️ Session expired');
-                    clearSession();
-                }
-            }
-            return false;
-        }
-
-        // ====== SHOW/HIDE FORM ======
-        function showForm(userData) {
-            loginSection.style.display = 'none';
-            formSection.classList.add('active');
-            formSection.style.display = 'block';
-
-            namaLengkap.value = userData.nama || '';
-            nip.value = userData.nip || '';
-
-            userName.textContent = userData.nama || 'User';
-            dropdownName.textContent = userData.nama || 'User';
-            dropdownEmail.textContent = userData.nip || '-';
-
-            tahunPelaksanaan.value = new Date().getFullYear();
-            const today = new Date().toISOString().split('T')[0];
-            tglMulai.value = today;
-            tglSelesai.value = today;
-
-            updateHeaderPhoto(userData.foto);
-        }
-
-        function showLogin() {
-            loginSection.style.display = 'flex';
-            formSection.classList.remove('active');
-            formSection.style.display = 'none';
-            userName.textContent = 'Guest';
-            dropdownName.textContent = 'Guest';
-            dropdownEmail.textContent = '-';
-            loginNip.value = '';
-            loginNip.focus();
-        }
-
-        function updateHeaderPhoto(photoData) {
-            const headerIcon = document.getElementById('headerUserIcon');
-            if (!headerIcon) return;
-            
-            if (photoData && (photoData.startsWith('data:image') || photoData.startsWith('http'))) {
-                headerIcon.innerHTML = `<img src="${photoData}" alt="Profile" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
-                headerIcon.style.background = 'none';
-                headerIcon.style.padding = '0';
-                headerIcon.style.border = '2px solid var(--primary)';
-            } else {
-                headerIcon.innerHTML = `<i class="fas fa-user"></i>`;
-                headerIcon.style.background = '';
-                headerIcon.style.padding = '';
-                headerIcon.style.border = 'none';
-            }
-        }
-
-        // ====== LOGIN NIP ======
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const nipValue = loginNip.value.trim().replace(/\s/g, '');
-            
-            if (!nipValue) {
-                loginError.textContent = 'Silakan masukkan NIP.';
-                loginError.classList.add('show');
-                return;
-            }
-
-            if (nipValue.length < 8) {
-                loginError.textContent = 'NIP tidak valid (minimal 8 karakter).';
-                loginError.classList.add('show');
-                return;
-            }
-
-            loginBtn.disabled = true;
-            loginBtn.classList.add('loading');
-            loginError.classList.remove('show');
-
+        // ====== FUNGSI VERIFIKASI NIP ======
+        async function verifyNip(nipValue) {
             try {
-                const response = await fetch(`${GAS_NIP_URL}?nip=${encodeURIComponent(nipValue)}`);
+                const url = `${NIP_VALIDATION_URL}?nip=${encodeURIComponent(nipValue)}`;
+                const response = await fetch(url);
                 const result = await response.json();
 
                 if (result.success && result.data) {
-                    const userData = {
-                        nip: result.data.nip || nipValue,
-                        nama: result.data.nama || '',
-                        foto: result.data.foto || null
+                    return {
+                        valid: true,
+                        nip: result.data.nip,
+                        nama: result.data.nama
                     };
-
-                    saveSession(userData);
-                    showForm(userData);
-                    loginBtn.classList.remove('loading');
-                    loginBtn.disabled = false;
                 } else {
-                    loginError.textContent = result.message || 'NIP tidak ditemukan. Silakan periksa kembali.';
-                    loginError.classList.add('show');
-                    loginBtn.classList.remove('loading');
-                    loginBtn.disabled = false;
+                    return {
+                        valid: false,
+                        message: result.message || 'NIP tidak ditemukan'
+                    };
                 }
             } catch (error) {
-                console.error('[PK] Error checking NIP:', error);
-                loginError.textContent = 'Terjadi kesalahan koneksi. Silakan coba lagi.';
-                loginError.classList.add('show');
-                loginBtn.classList.remove('loading');
-                loginBtn.disabled = false;
+                console.error('Error verifying NIP:', error);
+                return {
+                    valid: false,
+                    message: 'Terjadi kesalahan saat verifikasi'
+                };
+            }
+        }
+
+        // ====== FUNGSI UPDATE HEADER ======
+        function updateHeader(user) {
+            if (user) {
+                const displayName = user.nama || 'User';
+                userName.textContent = displayName;
+                dropdownName.textContent = displayName;
+                dropdownEmail.textContent = user.nip || '-';
+            } else {
+                userName.textContent = 'Guest';
+                dropdownName.textContent = 'Guest';
+                dropdownEmail.textContent = '-';
+            }
+        }
+
+        // ====== HANDLE VERIFIKASI ======
+        verifyBtn.addEventListener('click', async () => {
+            const nipValue = nipInput.value.trim();
+
+            // Validasi input
+            if (!nipValue) {
+                verifyError.textContent = '⚠️ Silakan masukkan NIP Anda.';
+                verifySuccess.textContent = '';
+                return;
+            }
+
+            if (nipValue.length < 8 || nipValue.length > 18) {
+                verifyError.textContent = '⚠️ NIP tidak valid (8-18 digit).';
+                verifySuccess.textContent = '';
+                return;
+            }
+
+            // Disable button & show loading
+            verifyBtn.disabled = true;
+            verifyBtn.classList.add('loading');
+            verifyError.textContent = '';
+            verifySuccess.textContent = '';
+
+            try {
+                const result = await verifyNip(nipValue);
+
+                if (result.valid) {
+                    // Verifikasi berhasil
+                    verifySuccess.textContent = '✅ Verifikasi berhasil! Selamat datang, ' + result.nama;
+                    verifyError.textContent = '';
+                    
+                    // Simpan data user
+                    verifiedUser = {
+                        nama: result.nama,
+                        nip: result.nip
+                    };
+
+                    // Set cookie untuk session
+                    setCookie('verifiedUser', verifiedUser, 1);
+
+                    // Auto-fill form
+                    namaLengkap.value = result.nama;
+                    nip.value = result.nip;
+
+                    // Sembunyikan overlay & tampilkan form
+                    setTimeout(() => {
+                        verifyOverlay.classList.add('hidden');
+                        formSection.classList.remove('hidden');
+                        updateHeader(verifiedUser);
+                    }, 500);
+
+                } else {
+                    // Verifikasi gagal
+                    verifyError.textContent = '❌ ' + (result.message || 'NIP tidak ditemukan dalam database.');
+                    verifySuccess.textContent = '';
+                    verifyBtn.disabled = false;
+                    verifyBtn.classList.remove('loading');
+                    nipInput.focus();
+                    nipInput.select();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                verifyError.textContent = '❌ Terjadi kesalahan. Silakan coba lagi.';
+                verifySuccess.textContent = '';
+                verifyBtn.disabled = false;
+                verifyBtn.classList.remove('loading');
             }
         });
 
-        // ====== LOGOUT / BUKAN SAYA ======
-        logoutBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            if (confirm('Anda akan keluar dari sesi ini. Lanjutkan?')) {
-                clearSession();
-                showLogin();
-                userDropdown.classList.remove('active');
-                form.reset();
+        // ====== ENTER KEY UNTUK VERIFIKASI ======
+        nipInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                verifyBtn.click();
             }
         });
 
-        // ====== HEADER SCROLL ======
+        // ====== SCROLL EFFECT ======
         window.addEventListener('scroll', () => {
             header.classList.toggle('scrolled', window.scrollY > 50);
         });
@@ -1235,44 +1195,46 @@
         });
         document.addEventListener('click', () => userDropdown.classList.remove('active'));
 
-        // ====== FORM SUBMISSION - JSON + BASE64 ======
+        // ====== LOGOUT ======
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            deleteCookie('verifiedUser');
+            verifiedUser = null;
+            
+            // Reset form
+            form.reset();
+            
+            // Reset overlay
+            verifyOverlay.classList.remove('hidden');
+            formSection.classList.add('hidden');
+            nipInput.value = '';
+            verifyError.textContent = '';
+            verifySuccess.textContent = '';
+            verifyBtn.disabled = false;
+            verifyBtn.classList.remove('loading');
+            
+            updateHeader(null);
+            
+            // Reset header icon
+            const headerIcon = document.getElementById('headerUserIcon');
+            if (headerIcon) {
+                headerIcon.innerHTML = `<i class="fas fa-user"></i>`;
+                headerIcon.style.background = '';
+                headerIcon.style.padding = '';
+                headerIcon.style.border = 'none';
+            }
+            
+            console.log('[Form-PK] ✅ Logout: Session dihapus');
+        });
+
+        // ====== FORM SUBMISSION ======
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            // ==== VALIDASI FILE ====
-            const fileInput = document.getElementById('fileSertifikat');
-            if (!fileInput.files || fileInput.files.length === 0) {
-                alert('Silakan pilih file PDF.');
-                fileInput.style.borderColor = '#ef4444';
-                return;
-            }
-
-            const file = fileInput.files[0];
-            if (file.type !== 'application/pdf') {
-                alert('Hanya file PDF yang diperbolehkan.');
-                fileInput.style.borderColor = '#ef4444';
-                return;
-            }
-            if (file.size > 5 * 1024 * 1024) {
-                alert('Ukuran file maksimal 5MB.');
-                fileInput.style.borderColor = '#ef4444';
-                return;
-            }
-            fileInput.style.borderColor = '';
-
-            // ==== VALIDASI FORM ====
-            const requiredFields = [
-                document.getElementById('pangkat'),
-                document.getElementById('jabatan'),
-                document.getElementById('unitKerja'),
-                document.getElementById('statusKepegawaian'),
-                document.getElementById('namaDiklat'),
-                document.getElementById('tglMulai'),
-                document.getElementById('tglSelesai'),
-                document.getElementById('tahunPelaksanaan'),
-                document.getElementById('lama'),
-                document.getElementById('nomorSTTP'),
-                document.getElementById('instansiPenyelenggara')
+            const requiredFields = [namaLengkap, nip, pangkat, jabatan, unitKerja, statusKepegawaian,
+                namaDiklat, tglMulai, tglSelesai, tahunPelaksanaan, lama, nomorSTTP,
+                instansiPenyelenggara, linkSertifikat
             ];
 
             let isValid = true;
@@ -1290,106 +1252,74 @@
                 return;
             }
 
-            // ==== VALIDASI TANGGAL ====
-            const tglMulaiVal = document.getElementById('tglMulai').value;
-            const tglSelesaiVal = document.getElementById('tglSelesai').value;
-            if (new Date(tglMulaiVal) > new Date(tglSelesaiVal)) {
+            if (new Date(tglMulai.value) > new Date(tglSelesai.value)) {
                 alert('Tanggal mulai tidak boleh lebih besar dari tanggal selesai.');
-                document.getElementById('tglMulai').style.borderColor = '#ef4444';
-                document.getElementById('tglSelesai').style.borderColor = '#ef4444';
+                tglMulai.style.borderColor = '#ef4444';
+                tglSelesai.style.borderColor = '#ef4444';
                 return;
             }
 
-            // ==== AMBIL SESSION ====
-            const session = getSession();
-            if (!session || !session.nip) {
-                alert('Sesi Anda telah berakhir. Silakan login kembali.');
-                clearSession();
-                showLogin();
+            const link = linkSertifikat.value.trim();
+            if (!link.startsWith('https://drive.google.com/')) {
+                alert('Link harus berupa URL Google Drive yang valid.');
+                linkSertifikat.style.borderColor = '#ef4444';
                 return;
             }
 
-            // ==== KONVERSI FILE KE BASE64 ====
+            const data = {
+                namaLengkap: namaLengkap.value.trim(),
+                nip: nip.value.trim(),
+                pangkat: pangkat.value.trim(),
+                unitKerja: unitKerja.value,
+                statusKepegawaian: statusKepegawaian.value,
+                namaDiklat: namaDiklat.value.trim(),
+                tglMulai: tglMulai.value,
+                tglSelesai: tglSelesai.value,
+                tahunPelaksanaan: tahunPelaksanaan.value,
+                lama: lama.value,
+                nomorSTTP: nomorSTTP.value.trim(),
+                instansiPenyelenggara: instansiPenyelenggara.value.trim(),
+                linkSertifikat: link,
+                jabatan: jabatan.value.trim()
+            };
+
             submitBtn.disabled = true;
             submitBtn.classList.add('loading');
 
             try {
-                const reader = new FileReader();
-                const fileBase64 = await new Promise((resolve, reject) => {
-                    reader.onload = () => resolve(reader.result.split(',')[1]);
-                    reader.onerror = reject;
-                    reader.readAsDataURL(file);
-                });
-
-                console.log('[PK] File converted to base64, length: ' + fileBase64.length);
-
-                // ==== BUAT DATA JSON ====
-                const data = {
-                    fileBase64: fileBase64,
-                    fileName: file.name,
-                    fileType: file.type,
-                    nip: session.nip,
-                    nama: session.nama || '',
-                    pangkat: document.getElementById('pangkat').value.trim(),
-                    jabatan: document.getElementById('jabatan').value.trim(),
-                    unitKerja: document.getElementById('unitKerja').value,
-                    statusKepegawaian: document.getElementById('statusKepegawaian').value,
-                    namaDiklat: document.getElementById('namaDiklat').value.trim(),
-                    tglMulai: document.getElementById('tglMulai').value,
-                    tglSelesai: document.getElementById('tglSelesai').value,
-                    tahunPelaksanaan: document.getElementById('tahunPelaksanaan').value,
-                    lama: document.getElementById('lama').value,
-                    nomorSTTP: document.getElementById('nomorSTTP').value.trim(),
-                    instansiPenyelenggara: document.getElementById('instansiPenyelenggara').value.trim()
-                };
-
-                console.log('[PK] Sending to GAS as JSON...');
-
-                // ==== KIRIM KE GAS SEBAGAI JSON ====
-                const response = await fetch(GAS_UPLOAD_URL, {
+                const response = await fetch(GAS_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
 
-                console.log('[PK] Response status:', response.status);
-                
-                const result = await response.json();
-                console.log('[PK] Response:', result);
-
                 submitBtn.classList.remove('loading');
                 submitBtn.disabled = false;
+                successModal.classList.add('active');
 
-                if (result.success) {
-                    successModal.classList.add('active');
-                } else {
-                    alert('Gagal mengirim data: ' + (result.message || 'Silakan coba lagi.'));
-                }
             } catch (error) {
-                console.error('[PK] Error:', error);
+                console.error('Error:', error);
                 submitBtn.classList.remove('loading');
                 submitBtn.disabled = false;
-                alert('Terjadi kesalahan: ' + error.message);
+                alert('Terjadi kesalahan saat mengirim data. Silakan coba lagi.');
             }
         });
 
-        // ====== ISI LAGI / LANJUT ======
+        // ====== ISI LAGI ======
         isiLagiBtn.addEventListener('click', () => {
             successModal.classList.remove('active');
             form.reset();
 
-            const session = getSession();
-            if (session && session.nip) {
-                namaLengkap.value = session.nama || '';
-                nip.value = session.nip || '';
-                tahunPelaksanaan.value = new Date().getFullYear();
-                const today = new Date().toISOString().split('T')[0];
-                tglMulai.value = today;
-                tglSelesai.value = today;
+            if (verifiedUser) {
+                namaLengkap.value = verifiedUser.nama || '';
+                nip.value = verifiedUser.nip || '';
             }
 
+            tahunPelaksanaan.value = new Date().getFullYear();
+            const today = new Date().toISOString().split('T')[0];
+            tglMulai.value = today;
+            tglSelesai.value = today;
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
 
@@ -1398,44 +1328,40 @@
             el.addEventListener('focus', () => { el.style.borderColor = ''; });
         });
 
+        // ====== CHECK SESSION ======
+        function checkSession() {
+            const savedUser = getCookie('verifiedUser');
+            if (savedUser && savedUser.nip && savedUser.nama) {
+                verifiedUser = savedUser;
+                namaLengkap.value = savedUser.nama;
+                nip.value = savedUser.nip;
+                verifyOverlay.classList.add('hidden');
+                formSection.classList.remove('hidden');
+                updateHeader(verifiedUser);
+                console.log('[Form-PK] ✅ Session ditemukan:', savedUser.nama);
+                return true;
+            }
+            return false;
+        }
+
         // ====== INIT ======
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('[PK] 🚀 Initializing...');
-
-            const hasSession = checkSession();
+            console.log('[Form-PK] 🚀 Initializing...');
             
+            // Set default dates
+            tahunPelaksanaan.value = new Date().getFullYear();
+            const today = new Date().toISOString().split('T')[0];
+            tglMulai.value = today;
+            tglSelesai.value = today;
+
+            // Cek session
+            const hasSession = checkSession();
             if (!hasSession) {
-                showLogin();
+                // Tampilkan overlay verifikasi
+                verifyOverlay.classList.remove('hidden');
+                formSection.classList.add('hidden');
+                nipInput.focus();
             }
-
-            // Auto-login from URL parameter
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('nip')) {
-                const nipParam = urlParams.get('nip');
-                loginNip.value = nipParam;
-                loginForm.dispatchEvent(new Event('submit'));
-            }
-
-            if (window.location.search) {
-                const cleanUrl = window.location.origin + window.location.pathname;
-                window.history.replaceState({}, document.title, cleanUrl);
-            }
-
-            // Session checker
-            setInterval(() => {
-                const session = getSession();
-                if (session && session.nip && session.nama) {
-                    const loginTime = new Date(session.loginTime);
-                    const now = new Date();
-                    const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
-                    if (hoursDiff >= 24) {
-                        console.log('[PK] ⚠️ Session expired by timer');
-                        clearSession();
-                        showLogin();
-                        alert('Sesi Anda telah berakhir (24 jam). Silakan login kembali.');
-                    }
-                }
-            }, 60000);
         });
     </script>
 </body>
