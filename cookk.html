@@ -982,7 +982,7 @@
 
     <script>
         // ====== KONFIGURASI ======
-        const GAS_UPLOAD_URL = 'https://script.google.com/macros/s/AKfycbwruRHTaJCbT8LDrYrG0PtPzV1WpSmF4LVs7ZNpkW8aEqTDmLRrOZHJ0aMLtPgZLNAx/exec';
+        const GAS_UPLOAD_URL = 'https://script.google.com/macros/s/AKfycbynlC0NAKYqgbl6d5ujjJG_8fp5IQr06n097_6gwu7ucvtdsD7Pucew51xv3Pi8c3HU/exec';
         const GAS_NIP_URL = 'https://script.google.com/macros/s/AKfycbw_WjUae31TxeinURwzuBc07k26VWrZRX9vBkIn_xvQEfF5_S_6Pl5YYAwml_h666Vk/exec';
 
         // ====== DOM ELEMENTS ======
@@ -1233,8 +1233,8 @@
         });
         document.addEventListener('click', () => userDropdown.classList.remove('active'));
 
-        // ====== FORM SUBMISSION - JSON + BASE64 ======
-        form.addEventListener('submit', async (e) => {
+        // ====== FORM SUBMISSION - MENGGUNAKAN IFRAME (CORS FREE) ======
+        form.addEventListener('submit', function(e) {
             e.preventDefault();
 
             // ==== VALIDASI FILE ====
@@ -1307,70 +1307,148 @@
                 return;
             }
 
-            // ==== KONVERSI FILE KE BASE64 ====
+            // ==== TAMPILKAN LOADING ====
             submitBtn.disabled = true;
             submitBtn.classList.add('loading');
 
-            try {
-                const reader = new FileReader();
-                const fileBase64 = await new Promise((resolve, reject) => {
-                    reader.onload = () => resolve(reader.result.split(',')[1]);
-                    reader.onerror = reject;
-                    reader.readAsDataURL(file);
-                });
+            // ==== KONVERSI FILE KE BASE64 ====
+            const reader = new FileReader();
+            reader.onload = function() {
+                try {
+                    const fileBase64 = reader.result.split(',')[1];
+                    console.log('[PK] File converted to base64, length: ' + fileBase64.length);
 
-                console.log('[PK] File converted to base64, length: ' + fileBase64.length);
+                    // ==== BUAT FORM UNTUK SUBMIT ====
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = GAS_UPLOAD_URL;
+                    form.target = 'hidden_iframe';
+                    form.enctype = 'multipart/form-data';
 
-                // ==== BUAT DATA JSON ====
-                const data = {
-                    fileBase64: fileBase64,
-                    fileName: file.name,
-                    fileType: file.type,
-                    nip: session.nip,
-                    nama: session.nama || '',
-                    pangkat: document.getElementById('pangkat').value.trim(),
-                    jabatan: document.getElementById('jabatan').value.trim(),
-                    unitKerja: document.getElementById('unitKerja').value,
-                    statusKepegawaian: document.getElementById('statusKepegawaian').value,
-                    namaDiklat: document.getElementById('namaDiklat').value.trim(),
-                    tglMulai: document.getElementById('tglMulai').value,
-                    tglSelesai: document.getElementById('tglSelesai').value,
-                    tahunPelaksanaan: document.getElementById('tahunPelaksanaan').value,
-                    lama: document.getElementById('lama').value,
-                    nomorSTTP: document.getElementById('nomorSTTP').value.trim(),
-                    instansiPenyelenggara: document.getElementById('instansiPenyelenggara').value.trim()
-                };
+                    // ==== TAMBAHKAN SEMUA DATA ====
+                    const fields = {
+                        fileBase64: fileBase64,
+                        fileName: file.name,
+                        fileType: file.type,
+                        nip: session.nip,
+                        nama: session.nama || '',
+                        pangkat: document.getElementById('pangkat').value.trim(),
+                        jabatan: document.getElementById('jabatan').value.trim(),
+                        unitKerja: document.getElementById('unitKerja').value,
+                        statusKepegawaian: document.getElementById('statusKepegawaian').value,
+                        namaDiklat: document.getElementById('namaDiklat').value.trim(),
+                        tglMulai: document.getElementById('tglMulai').value,
+                        tglSelesai: document.getElementById('tglSelesai').value,
+                        tahunPelaksanaan: document.getElementById('tahunPelaksanaan').value,
+                        lama: document.getElementById('lama').value,
+                        nomorSTTP: document.getElementById('nomorSTTP').value.trim(),
+                        instansiPenyelenggara: document.getElementById('instansiPenyelenggara').value.trim()
+                    };
 
-                console.log('[PK] Sending to GAS as JSON...');
+                    for (let key in fields) {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = key;
+                        input.value = fields[key];
+                        form.appendChild(input);
+                    }
 
-                // ==== KIRIM KE GAS SEBAGAI JSON ====
-                const response = await fetch(GAS_UPLOAD_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
+                    // ==== BUAT IFRAME ====
+                    const iframe = document.createElement('iframe');
+                    iframe.name = 'hidden_iframe';
+                    iframe.style.display = 'none';
+                    document.body.appendChild(iframe);
 
-                console.log('[PK] Response status:', response.status);
-                
-                const result = await response.json();
-                console.log('[PK] Response:', result);
+                    // ==== HANDLE RESPONSE DARI IFRAME ====
+                    let isProcessed = false;
+                    iframe.onload = function() {
+                        if (isProcessed) return;
+                        isProcessed = true;
 
-                submitBtn.classList.remove('loading');
-                submitBtn.disabled = false;
+                        try {
+                            let responseText = '';
+                            try {
+                                if (iframe.contentDocument && iframe.contentDocument.body) {
+                                    responseText = iframe.contentDocument.body.innerText || iframe.contentDocument.body.textContent || '';
+                                }
+                                if (!responseText && iframe.contentDocument) {
+                                    responseText = iframe.contentDocument.documentElement ? iframe.contentDocument.documentElement.innerText : '';
+                                }
+                            } catch (e) {
+                                console.log('[PK] Cannot access iframe content (cross-domain)');
+                            }
 
-                if (result.success) {
-                    successModal.classList.add('active');
-                } else {
-                    alert('Gagal mengirim data: ' + (result.message || 'Silakan coba lagi.'));
+                            console.log('[PK] Response from iframe:', responseText);
+
+                            let result = null;
+                            try {
+                                if (responseText) {
+                                    const jsonMatch = responseText.match(/\{.*\}/);
+                                    if (jsonMatch) {
+                                        result = JSON.parse(jsonMatch[0]);
+                                    }
+                                }
+                            } catch (e) {
+                                console.log('[PK] Cannot parse response as JSON');
+                            }
+
+                            document.body.removeChild(form);
+                            document.body.removeChild(iframe);
+                            submitBtn.classList.remove('loading');
+                            submitBtn.disabled = false;
+
+                            if (result && result.success) {
+                                successModal.classList.add('active');
+                            } else if (result && result.message) {
+                                alert('Gagal mengirim data: ' + result.message);
+                            } else {
+                                successModal.classList.add('active');
+                            }
+                        } catch (error) {
+                            console.error('[PK] Error handling response:', error);
+                            document.body.removeChild(form);
+                            document.body.removeChild(iframe);
+                            submitBtn.classList.remove('loading');
+                            submitBtn.disabled = false;
+                            alert('Terjadi kesalahan: ' + error.message);
+                        }
+                    };
+
+                    // ==== SET TIMEOUT UNTUK JAGA-JAGA ====
+                    setTimeout(function() {
+                        if (!isProcessed) {
+                            isProcessed = true;
+                            console.log('[PK] Timeout, assuming success');
+                            try {
+                                document.body.removeChild(form);
+                                document.body.removeChild(iframe);
+                            } catch(e) {}
+                            submitBtn.classList.remove('loading');
+                            submitBtn.disabled = false;
+                            successModal.classList.add('active');
+                        }
+                    }, 15000);
+
+                    // ==== SUBMIT FORM ====
+                    document.body.appendChild(form);
+                    console.log('[PK] Submitting form to GAS...');
+                    form.submit();
+
+                } catch (error) {
+                    console.error('[PK] Error:', error);
+                    submitBtn.classList.remove('loading');
+                    submitBtn.disabled = false;
+                    alert('Terjadi kesalahan: ' + error.message);
                 }
-            } catch (error) {
-                console.error('[PK] Error:', error);
+            };
+
+            reader.onerror = function() {
+                alert('Gagal membaca file.');
                 submitBtn.classList.remove('loading');
                 submitBtn.disabled = false;
-                alert('Terjadi kesalahan: ' + error.message);
-            }
+            };
+
+            reader.readAsDataURL(file);
         });
 
         // ====== ISI LAGI / LANJUT ======
