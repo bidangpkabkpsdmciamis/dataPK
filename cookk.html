@@ -1233,33 +1233,44 @@
         });
         document.addEventListener('click', () => userDropdown.classList.remove('active'));
 
-        // ====== FORM SUBMISSION - PERBAIKI ======
+        // ====== FORM SUBMISSION - DIPERBAIKI ======
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            // Validasi file
-            if (!fileSertifikat.files || fileSertifikat.files.length === 0) {
+            // ==== VALIDASI FILE ====
+            const fileInput = document.getElementById('fileSertifikat');
+            if (!fileInput.files || fileInput.files.length === 0) {
                 alert('Silakan pilih file PDF.');
-                fileSertifikat.style.borderColor = '#ef4444';
+                fileInput.style.borderColor = '#ef4444';
                 return;
             }
 
-            const file = fileSertifikat.files[0];
+            const file = fileInput.files[0];
             if (file.type !== 'application/pdf') {
                 alert('Hanya file PDF yang diperbolehkan.');
-                fileSertifikat.style.borderColor = '#ef4444';
+                fileInput.style.borderColor = '#ef4444';
                 return;
             }
             if (file.size > 5 * 1024 * 1024) {
                 alert('Ukuran file maksimal 5MB.');
-                fileSertifikat.style.borderColor = '#ef4444';
+                fileInput.style.borderColor = '#ef4444';
                 return;
             }
+            fileInput.style.borderColor = '';
 
-            // Validasi required fields
-            const requiredFields = [namaLengkap, nip, pangkat, jabatan, unitKerja, statusKepegawaian,
-                namaDiklat, tglMulai, tglSelesai, tahunPelaksanaan, lama, nomorSTTP,
-                instansiPenyelenggara
+            // ==== VALIDASI FORM ====
+            const requiredFields = [
+                document.getElementById('pangkat'),
+                document.getElementById('jabatan'),
+                document.getElementById('unitKerja'),
+                document.getElementById('statusKepegawaian'),
+                document.getElementById('namaDiklat'),
+                document.getElementById('tglMulai'),
+                document.getElementById('tglSelesai'),
+                document.getElementById('tahunPelaksanaan'),
+                document.getElementById('lama'),
+                document.getElementById('nomorSTTP'),
+                document.getElementById('instansiPenyelenggara')
             ];
 
             let isValid = true;
@@ -1277,14 +1288,17 @@
                 return;
             }
 
-            if (new Date(tglMulai.value) > new Date(tglSelesai.value)) {
+            // ==== VALIDASI TANGGAL ====
+            const tglMulaiVal = document.getElementById('tglMulai').value;
+            const tglSelesaiVal = document.getElementById('tglSelesai').value;
+            if (new Date(tglMulaiVal) > new Date(tglSelesaiVal)) {
                 alert('Tanggal mulai tidak boleh lebih besar dari tanggal selesai.');
-                tglMulai.style.borderColor = '#ef4444';
-                tglSelesai.style.borderColor = '#ef4444';
+                document.getElementById('tglMulai').style.borderColor = '#ef4444';
+                document.getElementById('tglSelesai').style.borderColor = '#ef4444';
                 return;
             }
 
-            // Ambil session
+            // ==== AMBIL SESSION ====
             const session = getSession();
             if (!session || !session.nip) {
                 alert('Sesi Anda telah berakhir. Silakan login kembali.');
@@ -1296,36 +1310,51 @@
             // ==== BUAT FormData ====
             const formData = new FormData();
             
-            // Tambahkan file
+            // Tambahkan file dengan key 'file'
             formData.append('file', file, `${session.nip}.pdf`);
             
             // Tambahkan data lainnya
             formData.append('nip', session.nip);
             formData.append('nama', session.nama || '');
-            formData.append('pangkat', pangkat.value.trim());
-            formData.append('jabatan', jabatan.value.trim());
-            formData.append('unitKerja', unitKerja.value);
-            formData.append('statusKepegawaian', statusKepegawaian.value);
-            formData.append('namaDiklat', namaDiklat.value.trim());
-            formData.append('tglMulai', tglMulai.value);
-            formData.append('tglSelesai', tglSelesai.value);
-            formData.append('tahunPelaksanaan', tahunPelaksanaan.value);
-            formData.append('lama', lama.value);
-            formData.append('nomorSTTP', nomorSTTP.value.trim());
-            formData.append('instansiPenyelenggara', instansiPenyelenggara.value.trim());
+            formData.append('pangkat', document.getElementById('pangkat').value.trim());
+            formData.append('jabatan', document.getElementById('jabatan').value.trim());
+            formData.append('unitKerja', document.getElementById('unitKerja').value);
+            formData.append('statusKepegawaian', document.getElementById('statusKepegawaian').value);
+            formData.append('namaDiklat', document.getElementById('namaDiklat').value.trim());
+            formData.append('tglMulai', document.getElementById('tglMulai').value);
+            formData.append('tglSelesai', document.getElementById('tglSelesai').value);
+            formData.append('tahunPelaksanaan', document.getElementById('tahunPelaksanaan').value);
+            formData.append('lama', document.getElementById('lama').value);
+            formData.append('nomorSTTP', document.getElementById('nomorSTTP').value.trim());
+            formData.append('instansiPenyelenggara', document.getElementById('instansiPenyelenggara').value.trim());
+
+            // ==== DEBUG: Cek isi FormData ====
+            console.log('[PK] FormData entries:');
+            for (let pair of formData.entries()) {
+                if (pair[0] === 'file') {
+                    console.log('[PK]   file: ' + pair[1].name + ' (' + pair[1].size + ' bytes)');
+                } else {
+                    console.log('[PK]   ' + pair[0] + ': ' + pair[1]);
+                }
+            }
 
             // ==== KIRIM KE GAS ====
             submitBtn.disabled = true;
             submitBtn.classList.add('loading');
 
             try {
+                console.log('[PK] Sending to GAS...');
+                
                 const response = await fetch(GAS_UPLOAD_URL, {
                     method: 'POST',
                     body: formData
                 });
 
-                const result = await response.json();
+                console.log('[PK] Response status:', response.status);
                 
+                const result = await response.json();
+                console.log('[PK] Response:', result);
+
                 submitBtn.classList.remove('loading');
                 submitBtn.disabled = false;
 
@@ -1388,6 +1417,7 @@
                 window.history.replaceState({}, document.title, cleanUrl);
             }
 
+            // Session checker
             setInterval(() => {
                 const session = getSession();
                 if (session && session.nip && session.nama) {
