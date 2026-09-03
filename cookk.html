@@ -982,7 +982,7 @@
 
     <script>
         // ====== KONFIGURASI ======
-        const GAS_UPLOAD_URL = 'https://script.google.com/macros/s/AKfycbwg9NoHALjqDwHA2ib_SX0MtBC_hE_M8WBHeab4L-W0HiD8xfNhr34GKyKetoLLX2ym/exec';
+        const GAS_UPLOAD_URL = 'https://script.google.com/macros/s/AKfycbx2wldcfRXlF33on_47fQPLrrqoF-8nUVUsExoOOuHFOdCex2CGU6I9XJWYeKfAS_nE/exec';
         const GAS_NIP_URL = 'https://script.google.com/macros/s/AKfycbw_WjUae31TxeinURwzuBc07k26VWrZRX9vBkIn_xvQEfF5_S_6Pl5YYAwml_h666Vk/exec';
 
         // ====== DOM ELEMENTS ======
@@ -1068,7 +1068,6 @@
                     const local = localStorage.getItem('pkSession');
                     if (local) {
                         session = JSON.parse(local);
-                        // Restore cookie if localStorage has it
                         if (session && session.nip) {
                             setCookie('pkSession', session, 24);
                         }
@@ -1088,7 +1087,6 @@
         function checkSession() {
             const session = getSession();
             if (session && session.nip && session.nama) {
-                // Check if session is still valid (24 hours)
                 const loginTime = new Date(session.loginTime);
                 const now = new Date();
                 const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
@@ -1117,7 +1115,6 @@
             dropdownName.textContent = userData.nama || 'User';
             dropdownEmail.textContent = userData.nip || '-';
 
-            // Set default values
             tahunPelaksanaan.value = new Date().getFullYear();
             const today = new Date().toISOString().split('T')[0];
             tglMulai.value = today;
@@ -1171,13 +1168,11 @@
                 return;
             }
 
-            // Show loading
             loginBtn.disabled = true;
             loginBtn.classList.add('loading');
             loginError.classList.remove('show');
 
             try {
-                // Check NIP via GAS
                 const response = await fetch(`${GAS_NIP_URL}?nip=${encodeURIComponent(nipValue)}`);
                 const result = await response.json();
 
@@ -1185,13 +1180,9 @@
                     const userData = {
                         nip: result.data.nip || nipValue,
                         nama: result.data.nama || '',
-                        foto: result.data.foto || null,
-                        pangkat: result.data.pangkat || '',
-                        jabatan: result.data.jabatan || '',
-                        unitKerja: result.data.unitKerja || ''
+                        foto: result.data.foto || null
                     };
 
-                    // Save session
                     saveSession(userData);
                     showForm(userData);
                     loginBtn.classList.remove('loading');
@@ -1218,7 +1209,6 @@
                 clearSession();
                 showLogin();
                 userDropdown.classList.remove('active');
-                // Reset form
                 form.reset();
             }
         });
@@ -1243,11 +1233,30 @@
         });
         document.addEventListener('click', () => userDropdown.classList.remove('active'));
 
-        // ====== FORM SUBMISSION ======
+        // ====== FORM SUBMISSION - PERBAIKI ======
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            // Validate required fields
+            // Validasi file
+            if (!fileSertifikat.files || fileSertifikat.files.length === 0) {
+                alert('Silakan pilih file PDF.');
+                fileSertifikat.style.borderColor = '#ef4444';
+                return;
+            }
+
+            const file = fileSertifikat.files[0];
+            if (file.type !== 'application/pdf') {
+                alert('Hanya file PDF yang diperbolehkan.');
+                fileSertifikat.style.borderColor = '#ef4444';
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Ukuran file maksimal 5MB.');
+                fileSertifikat.style.borderColor = '#ef4444';
+                return;
+            }
+
+            // Validasi required fields
             const requiredFields = [namaLengkap, nip, pangkat, jabatan, unitKerja, statusKepegawaian,
                 namaDiklat, tglMulai, tglSelesai, tahunPelaksanaan, lama, nomorSTTP,
                 instansiPenyelenggara
@@ -1263,25 +1272,6 @@
                 }
             });
 
-            // Validate file
-            if (!fileSertifikat.files || fileSertifikat.files.length === 0) {
-                fileSertifikat.style.borderColor = '#ef4444';
-                isValid = false;
-            } else {
-                fileSertifikat.style.borderColor = '';
-                const file = fileSertifikat.files[0];
-                if (file.size > 5 * 1024 * 1024) {
-                    alert('Ukuran file maksimal 5MB.');
-                    fileSertifikat.style.borderColor = '#ef4444';
-                    isValid = false;
-                }
-                if (file.type !== 'application/pdf') {
-                    alert('Hanya file PDF yang diperbolehkan.');
-                    fileSertifikat.style.borderColor = '#ef4444';
-                    isValid = false;
-                }
-            }
-
             if (!isValid) {
                 alert('Mohon lengkapi semua kolom yang wajib diisi.');
                 return;
@@ -1294,7 +1284,7 @@
                 return;
             }
 
-            // Get session data
+            // Ambil session
             const session = getSession();
             if (!session || !session.nip) {
                 alert('Sesi Anda telah berakhir. Silakan login kembali.');
@@ -1303,15 +1293,14 @@
                 return;
             }
 
-            // Prepare form data for upload
+            // ==== BUAT FormData ====
             const formData = new FormData();
-            const file = fileSertifikat.files[0];
-            const nipValue = session.nip;
-
-            // Rename file to NIP.pdf
-            const renamedFile = new File([file], `${nipValue}.pdf`, { type: file.type });
-            formData.append('file', renamedFile);
-            formData.append('nip', nipValue);
+            
+            // Tambahkan file
+            formData.append('file', file, `${session.nip}.pdf`);
+            
+            // Tambahkan data lainnya
+            formData.append('nip', session.nip);
             formData.append('nama', session.nama || '');
             formData.append('pangkat', pangkat.value.trim());
             formData.append('jabatan', jabatan.value.trim());
@@ -1325,7 +1314,7 @@
             formData.append('nomorSTTP', nomorSTTP.value.trim());
             formData.append('instansiPenyelenggara', instansiPenyelenggara.value.trim());
 
-            // Show loading
+            // ==== KIRIM KE GAS ====
             submitBtn.disabled = true;
             submitBtn.classList.add('loading');
 
@@ -1336,7 +1325,7 @@
                 });
 
                 const result = await response.json();
-
+                
                 submitBtn.classList.remove('loading');
                 submitBtn.disabled = false;
 
@@ -1346,10 +1335,10 @@
                     alert('Gagal mengirim data: ' + (result.message || 'Silakan coba lagi.'));
                 }
             } catch (error) {
-                console.error('[PK] Error uploading:', error);
+                console.error('[PK] Error:', error);
                 submitBtn.classList.remove('loading');
                 submitBtn.disabled = false;
-                alert('Terjadi kesalahan saat mengirim data. Silakan coba lagi.');
+                alert('Terjadi kesalahan: ' + error.message);
             }
         });
 
@@ -1380,7 +1369,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             console.log('[PK] 🚀 Initializing...');
 
-            // Check for existing session
             const hasSession = checkSession();
             
             if (!hasSession) {
@@ -1395,13 +1383,11 @@
                 loginForm.dispatchEvent(new Event('submit'));
             }
 
-            // Remove URL params after use
             if (window.location.search) {
                 const cleanUrl = window.location.origin + window.location.pathname;
                 window.history.replaceState({}, document.title, cleanUrl);
             }
 
-            // Periodically check session
             setInterval(() => {
                 const session = getSession();
                 if (session && session.nip && session.nama) {
@@ -1415,7 +1401,7 @@
                         alert('Sesi Anda telah berakhir (24 jam). Silakan login kembali.');
                     }
                 }
-            }, 60000); // Check every minute
+            }, 60000);
         });
     </script>
 </body>
